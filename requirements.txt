@@ -8,7 +8,6 @@ torch
 scipy
 h5py
 tqdm
-kivy
 gunicorn==20.1.0
 
 
