@@ -1,68 +1,21 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import numpy as np
-import torch
 from utile import get_legal_moves, initialze_board
 
-BOARD_SIZE = 8
 app = Flask(__name__)
 CORS(app)
-
-def input_seq_generator(board_stats_seq, length_seq):
-    board_stat_init = initialze_board()
-
-    if len(board_stats_seq) >= length_seq:
-        input_seq = board_stats_seq[-length_seq:]
-    else:
-        input_seq = [board_stat_init] * (length_seq - len(board_stats_seq))
-        input_seq.extend(board_stats_seq)
-            
-    return input_seq
-
-def find_best_move(move1_prob, legal_moves):
-    best_move = legal_moves[0]
-    max_score = move1_prob[legal_moves[0][0], legal_moves[0][1]]
-    
-    for move in legal_moves:
-        if move1_prob[move[0], move[1]] > max_score:
-            max_score = move1_prob[move[0], move[1]]
-            best_move = move
-    return best_move
 
 class ReversiGrid:
     def __init__(self):
         self.board = [[0 for _ in range(8)] for _ in range(8)]
         self.current_player = -1
-        self.create_board()  # Call create_board method to initialize the visual representation
         self.place_initial_pieces()
 
-    def create_board(self):
-        # Create the board with initial pieces
-        for row in range(8):
-            for col in range(8):
-                cell.bind(on_press=self.make_move) # type: ignore
-                if (row, col) in [(3, 3), (4, 4)]:
-                    self.board[row][col] = 1
-                elif (row, col) in [(3, 4), (4, 3)]:
-                    self.board[row][col] = -1
-    
     def place_initial_pieces(self):
         self.board[3][3] = 1
         self.board[4][4] = 1
         self.board[3][4] = -1
         self.board[4][3] = -1
-        for i, child in enumerate(reversed(self.children)):
-            row, col = self.get_coords(child)
-            if (row, col) in [(3, 3), (4, 4)]:
-                child.background_normal = 'white_circle.png'
-            elif (row, col) in [(3, 4), (4, 3)]:
-                child.background_normal = 'black_circle.png'
-
-    def get_coords(self, instance):
-        index = self.children.index(instance)
-        row = index // self.cols
-        col = index % self.cols
-        return row, col
 
     def is_valid_move(self, row, col):
         if self.board[row][col] != 0:
@@ -81,19 +34,9 @@ class ReversiGrid:
 
         return False
 
-    def update_board(self):
-        for i, child in enumerate(reversed(self.children)):
-            row, col = self.get_coords(child)
-            if self.board[row][col] == -1:
-                child.background_normal = 'black_circle.png'  
-            elif self.board[row][col] == 1:
-                child.background_normal = 'white_circle.png' 
-
     def make_move(self, row, col):
         if self.is_valid_move(row, col):
             self.board[row][col] = self.current_player
-            self.flip_pieces(row, col)
-            self.update_board()
             self.current_player = -1 if self.current_player == 1 else 1
             black_count, white_count = self.count_pieces()
 
@@ -105,46 +48,7 @@ class ReversiGrid:
         return {"success": True}
 
     def make_one_move(self, player_disc, player):
-        if ((self.current_player == -1 and player_disc == 'Black') or (self.current_player == 1 and player_disc == 'White')):
-            return -1, -1
-
-        device = torch.device("cpu")
-        conf = {}
-        if player == 'Easy':
-            conf['player'] = 'Easy.pt'
-        elif player == 'Medium':
-            conf['player'] = 'Medium.pt'
-        elif player == 'Hard':
-            conf['player'] = 'Hard.pt'
-
-        model = torch.load(conf['player'], map_location=torch.device('cpu'))
-        model.eval()
-        input_seq_boards = input_seq_generator(self.board, model.len_inpout_seq)
-
-        if self.current_player == -1:
-            model_input = np.array([input_seq_boards]) * -1
-        else:
-            model_input = np.array([input_seq_boards])
-        
-        move1_prob = model(torch.tensor(model_input).float().to(device))
-        move1_prob = move1_prob.cpu().detach().numpy().reshape(8, 8)
-        legal_moves = get_legal_moves(self.board, self.current_player)
-        if len(legal_moves) > 0:
-            best_move = find_best_move(move1_prob, legal_moves)
-            return best_move
-
-    def flip_pieces(self, row, col):
-        directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-        for dx, dy in directions:
-            r, c = row + dx, col + dy
-            to_flip = []
-            while 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] != 0 and self.board[r][c] != self.current_player:
-                to_flip.append((r, c))
-                r += dx
-                c += dy
-            if 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] == self.current_player:
-                for r, c in to_flip:
-                    self.board[r][c] = self.current_player
+        return -1, -1
     
     def count_pieces(self):
         black_count = sum(row.count(-1) for row in self.board)
@@ -153,9 +57,6 @@ class ReversiGrid:
 
 reversi_game = ReversiGrid()
 
-class ReversiApp(App):
-    def build(self):
-        return ReversiGrid()
 
 @app.route('/get_board', methods=['GET'])
 def get_board():
@@ -199,3 +100,4 @@ def make_one_move():
         response.headers.add('winner', winner)
 
     return response
+
