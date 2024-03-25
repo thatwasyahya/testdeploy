@@ -168,8 +168,5 @@ def count_pieces():
     return black_count, white_count 
 
 if __name__ == "__main__":
-    import os
-    host = '0.0.0.0'
-    port = int(os.environ.get('PORT', 5000))  # Use the PORT environment variable if available, otherwise default to 5000
-    app.run(host=host, port=port)
+    app.run()
 
