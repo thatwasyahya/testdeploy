@@ -33,6 +33,36 @@ class ReversiGrid:
     def __init__(self):
         self.board = [[0 for _ in range(8)] for _ in range(8)]
         self.current_player = -1
+        self.create_board()  # Call create_board method to initialize the visual representation
+        self.place_initial_pieces()
+
+    def create_board(self):
+        # Create the board with initial pieces
+        for row in range(8):
+            for col in range(8):
+                cell.bind(on_press=self.make_move) # type: ignore
+                if (row, col) in [(3, 3), (4, 4)]:
+                    self.board[row][col] = 1
+                elif (row, col) in [(3, 4), (4, 3)]:
+                    self.board[row][col] = -1
+    
+    def place_initial_pieces(self):
+        self.board[3][3] = 1
+        self.board[4][4] = 1
+        self.board[3][4] = -1
+        self.board[4][3] = -1
+        for i, child in enumerate(reversed(self.children)):
+            row, col = self.get_coords(child)
+            if (row, col) in [(3, 3), (4, 4)]:
+                child.background_normal = 'white_circle.png'
+            elif (row, col) in [(3, 4), (4, 3)]:
+                child.background_normal = 'black_circle.png'
+
+    def get_coords(self, instance):
+        index = self.children.index(instance)
+        row = index // self.cols
+        col = index % self.cols
+        return row, col
 
     def is_valid_move(self, row, col):
         if self.board[row][col] != 0:
@@ -51,10 +81,21 @@ class ReversiGrid:
 
         return False
 
+    def update_board(self):
+        for i, child in enumerate(reversed(self.children)):
+            row, col = self.get_coords(child)
+            if self.board[row][col] == -1:
+                child.background_normal = 'black_circle.png'  
+            elif self.board[row][col] == 1:
+                child.background_normal = 'white_circle.png' 
+
     def make_move(self, row, col):
         if self.is_valid_move(row, col):
             self.board[row][col] = self.current_player
+            self.flip_pieces(row, col)
+            self.update_board()
             self.current_player = -1 if self.current_player == 1 else 1
+            black_count, white_count = self.count_pieces()
 
             if not any(self.is_valid_move(row, col) for row in range(8) for col in range(8)):
                 black_count, white_count = self.count_pieces()
@@ -92,12 +133,29 @@ class ReversiGrid:
             best_move = find_best_move(move1_prob, legal_moves)
             return best_move
 
+    def flip_pieces(self, row, col):
+        directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        for dx, dy in directions:
+            r, c = row + dx, col + dy
+            to_flip = []
+            while 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] != 0 and self.board[r][c] != self.current_player:
+                to_flip.append((r, c))
+                r += dx
+                c += dy
+            if 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] == self.current_player:
+                for r, c in to_flip:
+                    self.board[r][c] = self.current_player
+    
     def count_pieces(self):
         black_count = sum(row.count(-1) for row in self.board)
         white_count = sum(row.count(1) for row in self.board)
         return black_count, white_count 
 
 reversi_game = ReversiGrid()
+
+class ReversiApp(App):
+    def build(self):
+        return ReversiGrid()
 
 @app.route('/get_board', methods=['GET'])
 def get_board():
