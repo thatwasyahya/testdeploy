@@ -167,6 +167,5 @@ def count_pieces():
     white_count = sum(row.count(1) for row in board)
     return black_count, white_count 
 
-if __name__ == "__main__":
-    app.run(debug=True, port=10000)
+
 
