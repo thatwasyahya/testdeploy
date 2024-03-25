@@ -72,15 +72,15 @@ def make_ai_move(player_disc, player):
         return best_move
     return -1, -1
 
-@app.route('/api/get_board', methods=['GET'])
+@app.route('/get_board', methods=['GET'])
 def get_board():
     return jsonify(board)
 
-@app.route('/api/get_possible_moves', methods=['GET'])
+@app.route('/get_possible_moves', methods=['GET'])
 def get_possible_moves():
     return jsonify(get_legal_moves(board, current_player))
 
-@app.route('/api/make_move', methods=['POST'])
+@app.route('/make_move', methods=['POST'])
 def make_move():
     global board, current_player
 
@@ -101,7 +101,7 @@ def make_move():
 
     return jsonify({"success": True})
 
-@app.route('/api/make_one_move', methods=['POST'])
+@app.route('/make_one_move', methods=['POST'])
 def make_one_move():
     global board, current_player
 
