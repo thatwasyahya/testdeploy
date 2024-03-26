@@ -77,8 +77,6 @@ class ReversiGrid:
                 r += dx
                 c += dy
             if 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] == self.current_player and to_flip:
-                for r, c in to_flip:
-                    self.board[r][c] = self.current_player
                 return True
 
         return False
