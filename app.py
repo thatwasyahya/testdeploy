@@ -66,7 +66,23 @@ class ReversiGrid:
 
     def is_valid_move(self, row, col):
         if self.board[row][col] != 0:
-            return False
+            return False  # La case est déjà occupée, le mouvement est donc invalide
+
+        directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        valid_move = False
+
+        for dx, dy in directions:
+            r, c = row + dx, col + dy
+            to_flip = []
+            while 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] != 0 and self.board[r][c] != self.current_player:
+                to_flip.append((r, c))
+                r += dx
+                c += dy
+            if 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] == self.current_player and to_flip:
+                valid_move = True
+                break
+
+        return valid_move
 
     def flip_pieces(self, row, col):
         directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
@@ -80,8 +96,6 @@ class ReversiGrid:
             if 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] == self.current_player:
                 for r, c in to_flip:
                     self.board[r][c] = self.current_player
-
-        return False
 
     def make_move(self, row, col):
         if self.is_valid_move(row, col):
