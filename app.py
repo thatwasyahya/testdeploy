@@ -68,6 +68,7 @@ class ReversiGrid:
         if self.board[row][col] != 0:
             return False
 
+    def flip_pieces(self, row, col):
         directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         for dx, dy in directions:
             r, c = row + dx, col + dy
@@ -76,8 +77,9 @@ class ReversiGrid:
                 to_flip.append((r, c))
                 r += dx
                 c += dy
-            if 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] == self.current_player and to_flip:
-                return True
+            if 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] == self.current_player:
+                for r, c in to_flip:
+                    self.board[r][c] = self.current_player
 
         return False
 
